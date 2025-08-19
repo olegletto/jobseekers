@@ -8,7 +8,9 @@ import {
   Github,
   Facebook,
   CheckCircle,
-  X
+  X,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Work_Sans } from "next/font/google";
 
@@ -28,6 +30,13 @@ export default function Home() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registeredUsers, setRegisteredUsers] = useState<Array<{email: string, password: string}>>([
+    { email: 'test@example.com', password: 'password123' }
+  ]);
 
   const testimonials = [
     {
@@ -59,40 +68,210 @@ export default function Home() {
     return password.length >= 8;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Mock fetch function to simulate server communication
+  const mockFetch = async (url: string, options: RequestInit) => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    
+    const { email: userEmail, password: userPassword } = JSON.parse(options.body as string);
+    
+    // Simulate different server responses based on the endpoint and data
+    if (url.includes('/login')) {
+      // Check if user exists in registered users
+      const userExists = registeredUsers.find(user => 
+        user.email === userEmail && user.password === userPassword
+      );
+      
+      if (userExists) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            success: true,
+            message: 'Login successful',
+            user: { email: userEmail, id: '12345' },
+            token: 'mock-jwt-token-12345'
+          })
+        };
+      } else {
+        return {
+          ok: false,
+          status: 401,
+          json: async () => ({
+            success: false,
+            message: 'Invalid email or password'
+          })
+        };
+      }
+    } else if (url.includes('/signup')) {
+      // Check if email already exists
+      const emailExists = registeredUsers.find(user => user.email === userEmail);
+      
+      if (emailExists) {
+        return {
+          ok: false,
+          status: 409,
+          json: async () => ({
+            success: false,
+            message: 'Email already exists'
+          })
+        };
+      } else {
+        // Add new user to registered users
+        const newUser = { email: userEmail, password: userPassword };
+        setRegisteredUsers(prev => [...prev, newUser]);
+        
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            success: true,
+            message: 'Account created successfully',
+            user: { email: userEmail, id: '67890' }
+          })
+        };
+      }
+    } else if (url.includes('/forgot-password')) {
+      // Check if user exists before sending recovery email
+      const userExists = registeredUsers.find(user => user.email === userEmail);
+      
+      if (userExists) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            success: true,
+            message: 'Recovery email sent successfully'
+          })
+        };
+      } else {
+        return {
+          ok: false,
+          status: 404,
+          json: async () => ({
+            success: false,
+            message: 'User not found'
+          })
+        };
+      }
+    } else if (url.includes('/reset-password')) {
+      // Update password for the user (we already verified they exist on forgot-password step)
+      const userIndex = registeredUsers.findIndex(user => user.email === userEmail);
+      
+      // Update existing user's password
+      setRegisteredUsers(prev => prev.map((user, index) => 
+        index === userIndex ? { ...user, password: userPassword } : user
+      ));
+      
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          success: true,
+          message: 'Password updated successfully'
+        })
+      };
+    }
+    
+    // Default error response
+    return {
+      ok: false,
+      status: 500,
+      json: async () => ({
+        success: false,
+        message: 'Server error'
+      })
+    };
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setIsError(false);
 
     if (!validateEmail(email)) {
+      setIsError(true);
       showToastMessage("Please enter a valid email address");
+      setIsLoading(false);
       return;
     }
     
     if (currentPage === "login" || currentPage === "signup" || currentPage === "reset-password") {
       if (!validatePassword(password)) {
+        setIsError(true);
         showToastMessage("Password must be at least 8 characters");
+        setIsLoading(false);
         return;
       }
     }
     
     if (currentPage === "signup" || currentPage === "reset-password") {
       if (password !== confirmPassword) {
+        setIsError(true);
         showToastMessage("Passwords do not match");
+        setIsLoading(false);
         return;
       }
     }
-    
-    if (currentPage === "login") {
-      setCurrentPage("success");
-      showToastMessage("Successfully logged in!");
-    } else if (currentPage === "signup") {
-      setCurrentPage("success");
-      showToastMessage("Account created successfully!");
-    } else if (currentPage === "forgot-password") {
-      setCurrentPage("reset-password");
-      showToastMessage("Recovery email sent!");
-    } else if (currentPage === "reset-password") {
-      setCurrentPage("login");
-      showToastMessage("Password reset successfully!");
+
+    try {
+      let endpoint = '';
+      let requestBody: { email: string; password?: string } = { email };
+
+      if (currentPage === "login") {
+        endpoint = '/api/auth/login';
+        requestBody = { email, password };
+      } else if (currentPage === "signup") {
+        endpoint = '/api/auth/signup';
+        requestBody = { email, password };
+      } else if (currentPage === "forgot-password") {
+        endpoint = '/api/auth/forgot-password';
+      } else if (currentPage === "reset-password") {
+        endpoint = '/api/auth/reset-password';
+        requestBody = { email, password };
+      }
+
+      const response = await mockFetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setIsError(false);
+        if (currentPage === "login") {
+          setCurrentPage("success");
+          showToastMessage("Successfully logged in!");
+        } else if (currentPage === "signup") {
+          setCurrentPage("success");
+          showToastMessage("Account created successfully!");
+        } else if (currentPage === "forgot-password") {
+          if (response.ok) {
+            setCurrentPage("reset-password");
+            showToastMessage("Recovery email sent!");
+          } else {
+            showToastMessage(data.message || "User not found");
+          }
+        } else if (currentPage === "reset-password") {
+          setCurrentPage("login");
+          showToastMessage(data.message || "Password updated successfully!");
+        }
+      } else {
+        setIsError(true);
+        showToastMessage(data.message || "An error occurred");
+      }
+    } catch (error) {
+      setIsError(true);
+      showToastMessage("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+      // Reset password visibility states after form submission
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     }
   };
 
@@ -197,9 +376,15 @@ export default function Home() {
             animate="animate"
             exit="exit"
             variants={toastVariants}
-            className="fixed top-6 left-1/2 z-50 flex items-center gap-2 px-4 py-2 bg-[#028090] text-white rounded-lg shadow-lg"
+            className={`fixed top-6 left-1/2 z-50 flex items-center gap-2 px-4 py-2 text-white rounded-lg shadow-lg ${
+              isError ? 'bg-red-500' : 'bg-[#028090]'
+            }`}
           >
-            <CheckCircle size={18} />
+            {isError ? (
+              <X size={18} />
+            ) : (
+              <CheckCircle size={18} />
+            )}
             <span>{toastMessage}</span>
             <button 
               onClick={() => setShowToast(false)}
@@ -313,13 +498,20 @@ export default function Home() {
                             </div>
                             <div className="relative">
                               <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
+                                className={`w-full px-4 py-3 pr-12 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
                                 placeholder="••••••••"
                                 required
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
                             </div>
                           </div>
                           
@@ -328,9 +520,21 @@ export default function Home() {
                             whileHover="hover"
                             whileTap="tap"
                             type="submit"
-                            className="w-full bg-[#00a896] hover:bg-[#00a896]/70 text-white font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer"
+                            disabled={isLoading}
+                            className={`w-full font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer ${
+                              isLoading 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-[#00a896] hover:bg-[#00a896]/70 text-white'
+                            }`}
                           >
-                            Sign in
+                            {isLoading ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Signing in...
+                              </div>
+                            ) : (
+                              'Sign in'
+                            )}
                           </motion.button>
                         </form>
                         
@@ -393,13 +597,20 @@ export default function Home() {
                             <label className="block text-sm font-medium">Password</label>
                             <div className="relative">
                               <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
+                                className={`w-full px-4 py-3 pr-12 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
                                 placeholder="••••••••"
                                 required
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
                             </div>
                           </div>
                           
@@ -407,13 +618,20 @@ export default function Home() {
                             <label className="block text-sm font-medium">Confirm Password</label>
                             <div className="relative">
                               <input
-                                type="password"
+                                type={showConfirmPassword ? "text" : "password"}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
+                                className={`w-full px-4 py-3 pr-12 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
                                 placeholder="••••••••"
                                 required
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
                             </div>
                           </div>
                           
@@ -422,9 +640,21 @@ export default function Home() {
                             whileHover="hover"
                             whileTap="tap"
                             type="submit"
-                            className="w-full bg-[#00a896] hover:bg-[#00a896]/70 text-white font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer"
+                            disabled={isLoading}
+                            className={`w-full font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer ${
+                              isLoading 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-[#00a896] hover:bg-[#00a896]/70 text-white'
+                            }`}
                           >
-                            Create Account
+                            {isLoading ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Creating account...
+                              </div>
+                            ) : (
+                              'Create Account'
+                            )}
                           </motion.button>
                         </form>
                         
@@ -488,9 +718,21 @@ export default function Home() {
                             whileHover="hover"
                             whileTap="tap"
                             type="submit"
-                            className="w-full bg-[#00a896] hover:bg-[#00a896]/70 text-white font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer"
+                            disabled={isLoading}
+                            className={`w-full font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer ${
+                              isLoading 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-[#00a896] hover:bg-[#00a896]/70 text-white'
+                            }`}
                           >
-                            Recover
+                            {isLoading ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Sending recovery email...
+                              </div>
+                            ) : (
+                              'Recover'
+                            )}
                           </motion.button>
                         </form>
                         
@@ -526,13 +768,20 @@ export default function Home() {
                             <label className="block text-sm font-medium">New Password</label>
                             <div className="relative">
                               <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
+                                className={`w-full px-4 py-3 pr-12 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
                                 placeholder="••••••••"
                                 required
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
                             </div>
                           </div>
                           
@@ -540,13 +789,20 @@ export default function Home() {
                             <label className="block text-sm font-medium">Confirm Password</label>
                             <div className="relative">
                               <input
-                                type="password"
+                                type={showConfirmPassword ? "text" : "password"}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
+                                className={`w-full px-4 py-3 pr-12 rounded-lg border ${theme === "dark" ? "bg-gray-900 border-gray-700 text-white" : "bg-white border-gray-300"} focus:outline-none focus:ring-2 focus:ring-[#00a896]`}
                                 placeholder="••••••••"
                                 required
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                              >
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                              </button>
                             </div>
                           </div>
                           
@@ -555,11 +811,37 @@ export default function Home() {
                             whileHover="hover"
                             whileTap="tap"
                             type="submit"
-                            className="w-full bg-[#00a896] hover:bg-[#00a896]/70 text-white font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer"
+                            disabled={isLoading}
+                            className={`w-full font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer ${
+                              isLoading 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-[#00a896] hover:bg-[#00a896]/70 text-white'
+                            }`}
                           >
-                            Update Password
+                            {isLoading ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Updating password...
+                              </div>
+                            ) : (
+                              'Update Password'
+                            )}
                           </motion.button>
                         </form>
+                        
+                        <div className="mt-8 text-center">
+                          <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+                            Remember your password?{" "}
+                            <motion.button
+                              onClick={() => setCurrentPage("login")}
+                              className="text-[#00a896] hover:underline font-medium cursor-pointer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              Back to login
+                            </motion.button>
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
