@@ -1,6 +1,7 @@
-# Jcareer - Job Search Platform
+# Jcareer - Login page - https://olegletto.github.io/jobseekers/
 
-A modern job search platform with beautiful UI and complete authentication system.
+You can create an account, log in to the account with the created credentials and change the password to the created account. The application uses imitation of a request to the server, adaptive layout, light/dark theme.
+
 
 ## 🏗️ Project Architecture
 
@@ -122,10 +123,3 @@ npm run dev
 5. **Improved Readability** - clear folder structure
 6. **Optimized Hooks** - each hook is responsible for its own area
 
-## 🔄 Next Steps
-
-- Add component tests
-- Implement real API
-- Add more pages (profile, job search)
-- Optimize performance
-- Add PWA functionality
