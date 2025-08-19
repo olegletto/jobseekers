@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jcareer - Job Search Platform
 
-## Getting Started
+A modern job search platform with beautiful UI and complete authentication system.
 
-First, run the development server:
+## 🏗️ Project Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The project is built using decomposition principles and separation of responsibilities:
+
+### 📁 Folder Structure
+
+```
+app/
+├── components/          # React components
+│   ├── auth/           # Authentication components
+│   │   ├── LoginForm.tsx          # Login form
+│   │   ├── SignupForm.tsx         # Registration form
+│   │   ├── ForgotPasswordForm.tsx # Password recovery & reset form
+│   │   └── SocialButtons.tsx      # Social login buttons
+│   ├── layout/         # Layout components
+│   │   ├── AuthLayout.tsx         # Main authentication layout
+│   │   ├── SuccessPage.tsx        # Success page
+│   │   └── HeroSection.tsx        # Right section with testimonials
+│   └── ui/             # UI components
+│       ├── Button.tsx             # Button
+│       ├── Input.tsx              # Input field
+│       ├── ThemeToggle.tsx        # Theme toggle
+│       └── Toast.tsx              # Notifications
+├── hooks/              # React hooks
+│   ├── useAuth.ts      # Authentication logic
+│   ├── useTheme.ts     # Theme management
+│   └── useToast.ts     # Notification management
+├── services/           # Services
+│   └── mockApi.ts      # Mock API service
+├── types/              # TypeScript types
+│   └── auth.ts         # Authentication types
+├── utils/              # Utilities
+│   └── validation.ts   # Validation
+└── page.tsx            # Main page
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎯 Decomposition Principles
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. **Separation of Responsibilities**
+- Each component is responsible for one specific task
+- Business logic is extracted into hooks
+- UI components are reusable
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. **Component Composition**
+- Small components are combined into larger ones
+- Clear component hierarchy
+- Easy testing and maintenance
 
-## Learn More
+### 3. **Centralized State Management**
+- `useAuth` - authentication logic
+- `useTheme` - theme management
+- `useToast` - notification management
 
-To learn more about Next.js, take a look at the following resources:
+### 4. **Structured Layout**
+- `AuthLayout` - main layout for all authentication pages
+- Separation of layout and auth components
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Main Components
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### AuthLayout
+Main layout that contains:
+- Theme toggle
+- Notification system
+- General page structure
 
-## Deploy on Vercel
+### Authentication Forms
+- **LoginForm** - system login
+- **SignupForm** - registration
+- **ForgotPasswordForm** - password recovery & reset (two-step process)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Layout Components
+- **SuccessPage** - success page
+- **HeroSection** - right section with testimonials
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### UI Components
+- **Button** - universal button with loading states
+- **Input** - input field with password show/hide support
+- **ThemeToggle** - theme toggle
+- **Toast** - notification system
+
+## 🎨 Theme System
+
+Support for light and dark themes using CSS variables and Tailwind CSS.
+
+## 📱 Responsiveness
+
+Fully responsive design using Tailwind CSS breakpoints.
+
+## 🎭 Animations
+
+Using Framer Motion for smooth animations:
+- Page transitions
+- Hover effects
+- Loading states
+- Notifications
+
+## 🔧 Technologies
+
+- **Next.js 14** - React framework
+- **TypeScript** - type safety
+- **Tailwind CSS** - styling
+- **Framer Motion** - animations
+- **Lucide React** - icons
+
+## 🚀 Running the Project
+
+```bash
+npm install
+npm run dev
+```
+
+## 📝 Benefits of the New Structure
+
+1. **Clear Separation** - layout and auth components are separated
+2. **Simplified Architecture** - fewer files, easier navigation
+3. **Better Organization** - logical component grouping
+4. **Easy Scaling** - simple addition of new pages
+5. **Improved Readability** - clear folder structure
+6. **Optimized Hooks** - each hook is responsible for its own area
+
+## 🔄 Next Steps
+
+- Add component tests
+- Implement real API
+- Add more pages (profile, job search)
+- Optimize performance
+- Add PWA functionality
