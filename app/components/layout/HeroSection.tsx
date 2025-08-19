@@ -53,7 +53,7 @@ export const HeroSection = ({ testimonials }: HeroSectionProps) => {
           <div className="relative overflow-hidden bg-[#028090] bg-opacity-20 backdrop-blur-md p-8 rounded-xl shadow-xl">
             <div className="text-white">
               <blockquote className="relative">
-                <span className="block text-5xl font-serif absolute -top-5 -left-4 text-white opacity-50">"</span>
+                <span className="block text-5xl font-serif absolute -top-5 -left-4 text-white opacity-50">&quot;</span>
                 <p className="text-lg mb-4 relative z-10">{testimonials[0].text}</p>
                 <footer className="mt-6">
                   <p className="font-semibold">{testimonials[0].author}</p>

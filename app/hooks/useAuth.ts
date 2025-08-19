@@ -5,7 +5,6 @@ import { validateEmail, validatePassword, validatePasswordsMatch } from "../util
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
 
   const handleSubmit = async (
     e: React.FormEvent,
@@ -16,7 +15,6 @@ export const useAuth = () => {
   ): Promise<boolean> => {
     e.preventDefault();
     setIsLoading(true);
-    setIsError(false);
 
     // Validation
     if (!validateEmail(formData.email)) {
@@ -72,7 +70,6 @@ export const useAuth = () => {
       const data: ApiResponse = await response.json();
 
       if (response.ok && data.success) {
-        setIsError(false);
         if (currentPage === "login") {
           onPageChange("success");
           onShowToast("Successfully logged in!", false);
@@ -91,12 +88,10 @@ export const useAuth = () => {
         }
         return true;
       } else {
-        setIsError(true);
         onShowToast(data.message || "An error occurred", true);
         return false;
       }
-    } catch (error) {
-      setIsError(true);
+    } catch {
       onShowToast("Network error. Please try again.", true);
       return false;
     } finally {
@@ -111,7 +106,6 @@ export const useAuth = () => {
 
   return {
     isLoading,
-    isError,
     handleSubmit,
     handleSocialLogin
   };

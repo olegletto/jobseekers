@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
 interface ButtonProps {
@@ -9,7 +9,7 @@ interface ButtonProps {
   loadingText?: string;
   className?: string;
   onClick?: () => void;
-  variants?: any;
+  variants?: Variants;
 }
 
 const buttonVariants = {
