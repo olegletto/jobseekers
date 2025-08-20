@@ -10,6 +10,7 @@ interface ButtonProps {
   className?: string;
   onClick?: () => void;
   variants?: Variants;
+  ariaLabel?: string;
 }
 
 const buttonVariants = {
@@ -26,7 +27,8 @@ export const Button = ({
   loadingText = "Loading...",
   className = "",
   onClick,
-  variants = buttonVariants
+  variants = buttonVariants,
+  ariaLabel
 }: ButtonProps) => {
   const baseClasses = "font-medium py-3 px-4 rounded-lg transition duration-200 cursor-pointer";
   const disabledClasses = "bg-gray-400 cursor-not-allowed";
@@ -40,14 +42,15 @@ export const Button = ({
       type={type}
       disabled={disabled || isLoading}
       onClick={onClick}
+      aria-label={ariaLabel}
       className={`${baseClasses} ${className} ${
         disabled || isLoading ? disabledClasses : enabledClasses
       }`}
     >
       {isLoading ? (
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-          {loadingText}
+        <div className="flex items-center justify-center" aria-live="polite">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" aria-hidden="true"></div>
+          <span>{loadingText}</span>
         </div>
       ) : (
         children

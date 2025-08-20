@@ -28,16 +28,17 @@ export const Toast = ({ show, message, isError, onClose }: ToastProps) => {
           }`}
         >
           {isError ? (
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           ) : (
-            <CheckCircle size={18} />
+            <CheckCircle size={18} aria-hidden="true" />
           )}
           <span>{message}</span>
           <button 
             onClick={onClose}
             className="ml-2 hover:text-gray-200"
+            aria-label="Close notification"
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
         </motion.div>
       )}

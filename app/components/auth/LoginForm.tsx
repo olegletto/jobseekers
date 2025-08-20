@@ -57,6 +57,7 @@ export const LoginForm = ({
           label="Email"
           required
           theme={theme}
+          name="email"
         />
         
         <div className="space-y-2">
@@ -68,6 +69,7 @@ export const LoginForm = ({
               className="text-sm text-[#00a896] hover:underline cursor-pointer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-label="Go to forgot password page"
             >
               Forgot Password
             </motion.button>
@@ -80,6 +82,7 @@ export const LoginForm = ({
             required
             theme={theme}
             showPasswordToggle
+            name="password"
           />
         </div>
         
@@ -116,6 +119,7 @@ export const LoginForm = ({
             className="text-[#00a896] hover:underline font-medium cursor-pointer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Go to sign up page"
           >
             Create an account
           </motion.button>

@@ -50,6 +50,7 @@ export const SignupForm = ({
           label="Email"
           required
           theme={theme}
+          name="email"
         />
         
         <Input
@@ -61,6 +62,7 @@ export const SignupForm = ({
           required
           theme={theme}
           showPasswordToggle
+          name="password"
         />
         
         <Input
@@ -72,6 +74,7 @@ export const SignupForm = ({
           required
           theme={theme}
           showPasswordToggle
+          name="confirmPassword"
         />
         
         <Button

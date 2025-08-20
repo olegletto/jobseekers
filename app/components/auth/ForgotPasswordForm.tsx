@@ -71,6 +71,7 @@ export const ForgotPasswordForm = ({
               label="Email"
               required
               theme={theme}
+              name="email"
             />
             
             <Button
