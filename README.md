@@ -1,4 +1,6 @@
-# Jcareer - Login page - https://olegletto.github.io/jobseekers/
+# Jcareer - Login page
+
+https://olegletto.github.io/jobseekers/
 
 You can create an account, log in to the account with the created credentials and change the password to the created account. The application uses imitation of a request to the server, adaptive layout, light/dark theme.
 
